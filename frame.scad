@@ -1,5 +1,5 @@
 // ==== Parameters ====
-length = 53.5;         // Length (X)
+length = 59;         // Length (X)
 width = 10;            // Width (Y)
 height = 10;           // Height (Z)
 
@@ -13,7 +13,7 @@ tenon_depth = 5;       // Tenon depth (X)
 tenon_radius = 3;      // Tenon radius
 
 corner_part = true;    // Add corner part (true = yes, false = no)
-corner_length = 77;
+corner_length = 82.5;
 
 add_holes = true;       // Enable/disable holes in the middle
 hole_diameter = 3;      // Diameter of the hole
@@ -24,7 +24,10 @@ strip_pattern = false;  // Create stripe pattern
 strip_spacing = 4;
 strip_width = 0.5;
 
-
+split_at_groove = true;
+split_tenon_count = 3;
+split_tenon_radius = 2;
+split_tenon_height = 2;
 
 
 // ==== Stripe Module (limited area) ====
@@ -57,18 +60,54 @@ module diagonal_stripe_area(start_x, start_y, corner_part, length, width, corner
     }
 }
 
+module generate_base(length, width, height, corner_part, corner_length) {
+    // --- Base cube ---
+    cube([length, width, height]);
+
+    // --- Add corner part if enabled ---
+    if (corner_part) {
+        translate([width, 0, 0])
+            rotate([0, 0, 90])  // 90 degree rotation around Y-axis
+                cube([corner_length, width, height]);
+    }
+}
+
+module generate_split_tenon(split_tenon_count, split_tenon_distance, corner_part, split_tenon_distance_corner, split_tenon_width_pos, split_tenon_height, split_tenon_radius, height) {
+    for(i = [1: 1 : split_tenon_count]) {
+                    translate([(split_tenon_distance * i) - split_tenon_distance / 2, split_tenon_width_pos, height])
+                        cylinder(h = split_tenon_height, r = split_tenon_radius, center = false, $fn = 64);
+                }
+                
+                if (corner_part) {
+                    for(i = [1: 1 : split_tenon_count]) {
+                        translate([split_tenon_width_pos, (split_tenon_distance_corner * i) - split_tenon_distance_corner / 2, height])
+                            cylinder(h = split_tenon_height, r = split_tenon_radius, center = false, $fn = 64);
+                    }
+                }
+}
+
 // ==== Main Module ====
 module frame_with_joining(length, width, height, groove_height, groove_depth, groove_pos_height, tenon_width, tenon_height, tenon_depth, tenon_radius, add_holes, hole_diameter, hole_depth, corner_part, corner_length) {
+    
+    // calculate variables
+    split_height = groove_pos_height+groove_height;
+    
+    split_tenon_height = ( height - split_height ) * 0.7;
+    split_tenon_width_pos = (width - groove_depth) / 2;
+    split_tenon_distance = length / split_tenon_count;
+    split_tenon_distance_corner = corner_length / split_tenon_count;
+    
     difference() {
         union() {
-            // --- Base cube ---
-            cube([length, width, height]);
-
-            // --- Add corner part if enabled ---
-            if (corner_part) {
-                translate([width, 0, 0])
-                    rotate([0, 0, 90])  // 90 degree rotation around Y-axis
-                        cube([corner_length, width, height]);
+            
+            
+            if (split_at_groove) {
+                generate_base(length, width, split_height, corner_part, corner_length);
+                translate([length * 2, 0, 0])
+                    generate_base(length, width, height - split_height, corner_part, corner_length);
+            }
+            else {
+                generate_base(length, width, height, corner_part, corner_length);
             }
             
             // --- Tenon at the beginning ---
@@ -87,9 +126,22 @@ module frame_with_joining(length, width, height, groove_height, groove_depth, gr
                     cylinder(h = tenon_height, r = tenon_radius, center = true);
             }
             
+            
+            // -- Tenon for connection --
+            if (split_at_groove) {
+                generate_split_tenon(split_tenon_count, split_tenon_distance, corner_part,split_tenon_distance_corner, split_tenon_width_pos, split_tenon_height, split_tenon_radius, split_height);
+            }
+            
+            
             // --- Diagonal stripes on top ---
             if (strip_pattern) {
-                diagonal_stripe_area(0, 0, corner_part, length, width, corner_length, height, strip_spacing, strip_width);
+                if (split_at_groove) {
+                    translate([length * 2, 0, 0])
+                        diagonal_stripe_area(0, 0, corner_part, length, width, corner_length, height-split_height, strip_spacing, strip_width);
+                }
+                else {
+                    diagonal_stripe_area(0, 0, corner_part, length, width, corner_length, height, strip_spacing, strip_width);
+                }
             }
         }
         
@@ -125,6 +177,12 @@ module frame_with_joining(length, width, height, groove_height, groove_depth, gr
                 translate([( width - groove_depth ) / 2, corner_length / 2, 0])
                     cylinder(h = hole_depth, r = hole_diameter / 2, center = false, $fn = 64);
             }
+        }
+        
+        // -- Tenon for connection --
+        if (split_at_groove) {
+            translate([length * 2, 0, 0])
+                generate_split_tenon(split_tenon_count, split_tenon_distance, corner_part,split_tenon_distance_corner, split_tenon_width_pos, split_tenon_height, split_tenon_radius, 0);
         }
         
     }
