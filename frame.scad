@@ -25,9 +25,10 @@ strip_spacing = 4;
 strip_width = 0.5;
 
 split_at_groove = true;
-split_tenon_count = 3;
+split_tenon_count = 2;
 split_tenon_radius = 2;
 split_tenon_height = 2;
+split_tenon_inner_percent = 0.98;
 
 
 // ==== Stripe Module (limited area) ====
@@ -87,7 +88,7 @@ module generate_split_tenon(split_tenon_count, split_tenon_distance, corner_part
 }
 
 // ==== Main Module ====
-module frame_with_joining(length, width, height, groove_height, groove_depth, groove_pos_height, tenon_width, tenon_height, tenon_depth, tenon_radius, add_holes, hole_diameter, hole_depth, corner_part, corner_length) {
+module frame_with_joining(length, width, height, groove_height, groove_depth, groove_pos_height, tenon_width, tenon_height, tenon_depth, tenon_radius, add_holes, hole_diameter, hole_depth, corner_part, corner_length, split_at_groove, split_tenon_count, split_tenon_radius, split_tenon_height, split_tenon_inner_percent) {
     
     // calculate variables
     split_height = groove_pos_height+groove_height;
@@ -129,7 +130,7 @@ module frame_with_joining(length, width, height, groove_height, groove_depth, gr
             
             // -- Tenon for connection --
             if (split_at_groove) {
-                generate_split_tenon(split_tenon_count, split_tenon_distance, corner_part,split_tenon_distance_corner, split_tenon_width_pos, split_tenon_height, split_tenon_radius, split_height);
+                generate_split_tenon(split_tenon_count, split_tenon_distance, corner_part,split_tenon_distance_corner, split_tenon_width_pos, split_tenon_height, split_tenon_radius*split_tenon_inner_percent, split_height);
             }
             
             
@@ -194,5 +195,6 @@ frame_with_joining(
     groove_height, groove_depth, groove_pos_height,
     tenon_width, tenon_height, tenon_depth, tenon_radius,
     add_holes, hole_diameter, hole_depth,
-    corner_part, corner_length
+    corner_part, corner_length,
+    split_at_groove, split_tenon_count, split_tenon_radius, split_tenon_height, split_tenon_inner_percent
 );
