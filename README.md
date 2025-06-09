@@ -1,6 +1,8 @@
 # openscad_frame
 Modular adaptable picture frame
 
+Uploaded on printables: https://www.printables.com/model/1269231-parametric-modular-picture-frame-openscad
+
 # Parameters:
 ```
 length = 53.5;         // Length (X)
