@@ -1,21 +1,21 @@
 // ==== Parameters ====
-length = 59;         // Length (X)
-width = 10;            // Width (Y)
-height = 10;           // Height (Z)
+length = 198;         // Length (X)
+width = 11;            // Width (Y)
+height = 11;           // Height (Z)
 
-groove_height = 1;     // Groove height (Z)
-groove_depth = 2;      // Groove depth (Y)
-groove_pos_height = 4.5; // Groove position height
+groove_height = 5.5;     // Groove height (Z)
+groove_depth = 3;      // Groove depth (Y)
+groove_pos_height = 2; // Groove position height
 
-tenon_width = 4;       // Tenon width (Y)
+tenon_width = 3;       // Tenon width (Y)
 tenon_height = 4;      // Tenon height (Z)
 tenon_depth = 5;       // Tenon depth (X)
 tenon_radius = 3;      // Tenon radius
 
 corner_part = true;    // Add corner part (true = yes, false = no)
-corner_length = 82.5;
+corner_length = 150;
 
-add_holes = true;       // Enable/disable holes in the middle
+add_holes = false;       // Enable/disable holes in the middle
 hole_diameter = 3;      // Diameter of the hole
 hole_depth = 5;        // Depth of the hole
 
@@ -26,7 +26,7 @@ strip_width = 0.5;
 
 split_at_groove = true;
 split_tenon_count = 2;
-split_tenon_radius = 2;
+split_tenon_radius = 1.8;
 split_tenon_height = 2;
 split_tenon_inner_percent = 0.98;
 
@@ -113,17 +113,17 @@ module frame_with_joining(length, width, height, groove_height, groove_depth, gr
             
             // --- Tenon at the beginning ---
             if (corner_part) {
-                translate([(width - tenon_width)/2 + tenon_width, corner_length, 0])
+                translate([(width - groove_depth - tenon_width)/2 + tenon_width, corner_length, 0])
                     rotate([0, 0, 90])  // 90 degree rotation around Z-axis for side tenon
                         cube([tenon_depth, tenon_width, tenon_height]);
-                translate([width / 2, corner_length + tenon_depth, tenon_height / 2])
+                translate([(width - groove_depth) / 2, corner_length + tenon_depth, tenon_height / 2])
                     rotate([0, 0, 90])  // 90 degree rotation around Z-axis for side tenon
                         cylinder(h = tenon_height, r = tenon_radius, center = true);
             }
             else {
-                translate([-tenon_depth, (width - tenon_width)/2, 0])
+                translate([-tenon_depth, (width - groove_depth - tenon_width)/2, 0])
                     cube([tenon_depth, tenon_width, tenon_height]);
-                translate([-tenon_depth, width / 2, tenon_height / 2])
+                translate([-tenon_depth, (width - groove_depth) / 2, tenon_height / 2])
                     cylinder(h = tenon_height, r = tenon_radius, center = true);
             }
             
@@ -147,9 +147,9 @@ module frame_with_joining(length, width, height, groove_height, groove_depth, gr
         }
         
         // --- Tenon socket at the end ---
-        translate([length - tenon_depth, (width - tenon_width)/2, 0])
+        translate([length - tenon_depth, (width - groove_depth - tenon_width)/2, 0])
             cube([tenon_depth, tenon_width, tenon_height]);
-        translate([length - tenon_depth, width / 2, tenon_height / 2])
+        translate([length - tenon_depth, (width - groove_depth) / 2, tenon_height / 2])
             cylinder(h = tenon_height, r = tenon_radius, center = true);
         
         // --- Inner groove ---
@@ -162,7 +162,7 @@ module frame_with_joining(length, width, height, groove_height, groove_depth, gr
                     cube([corner_length, groove_depth, groove_height]);
         }
         else {
-            translate([0, width, groove_pos_height])
+            translate([0, width - groove_depth, groove_pos_height])
                 cube([length, groove_depth, groove_height]);
         }
         
